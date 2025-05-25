@@ -1,6 +1,6 @@
 <?php
 session_start();
-if(!isset($_SESSION['email'])){
+if (!isset($_SESSION['email'])) {
     header("Location: Adminlogin.php");
     exit();
 }
@@ -17,22 +17,13 @@ $totalProducts = mysqli_fetch_assoc($res)['total'] ?? 0;
 $res = mysqli_query($con, "SELECT COUNT(*) AS total FROM user WHERE deleted_at IS NULL");
 $totalUsers = mysqli_fetch_assoc($res)['total'] ?? 0;
 
-$res = mysqli_query($con, "SELECT COUNT(*) AS total FROM `order` WHERE order_status='pending'");
+$res = mysqli_query($con, "SELECT COUNT(*) AS total FROM customer_order WHERE order_status='pending'");
 $pendingOrders = mysqli_fetch_assoc($res)['total'] ?? 0;
 
 $res = mysqli_query($con, "SELECT SUM(total) AS total FROM orderdetail");
 $totalRevenue = mysqli_fetch_assoc($res)['total'] ?? 0;
 
 $adminName = $_SESSION['admin_name'] ?? $_SESSION['email'];
-
-// Fetch products for table
-$productQuery = mysqli_query($con, "SELECT * FROM product");
-$products = [];
-if ($productQuery) {
-    while ($row = mysqli_fetch_assoc($productQuery)) {
-        $products[] = $row;
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,8 +41,8 @@ if ($productQuery) {
             <i class="fas fa-tshirt"></i> E-Clothing Store
         </div>
         <nav class="topnav-menu">
-            <a href="#" class="nav-link active">Home</a>
-            <a href="#" class="nav-link">About Us</a>
+            <a href="Admindashboard.php" class="nav-link active">Home</a>
+            <a href="../Aboutus/aboutus.php" class="nav-link">About Us</a>
             <a href="#" class="nav-link">Contact Us</a>
             <a href="#" class="nav-link">Help</a>
             <a href="Logout.php" class="nav-link logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -64,16 +55,9 @@ if ($productQuery) {
     <!-- Sidebar -->
     <aside class="sidebar">
         <ul class="sidebar-menu">
-            <li><a href="#" class="sidebar-link active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="Admindashboard.php" class="sidebar-link active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="../product/index.php" class="sidebar-link"><i class="fas fa-box-open"></i> Products</a></li>
 
-            <!-- Products as a simple link -->
-            <li>
-                <a href="../product/index.php" class="sidebar-link">
-                    <i class="fas fa-box-open"></i> Products
-                </a>
-            </li>
-
-            <!-- Categories with dropdown -->
             <li class="dropdown">
                 <a href="#" class="sidebar-link dropdown-toggle">
                     <i class="fas fa-tags"></i> Categories <i class="fas fa-chevron-down"></i>
@@ -86,7 +70,7 @@ if ($productQuery) {
             </li>
 
             <li><a href="#" class="sidebar-link"><i class="fas fa-users"></i> Customers</a></li>
-            <li><a href="#" class="sidebar-link"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+            <li><a href="../Orders/Orders.php" class="sidebar-link"><i class="fas fa-shopping-cart"></i> Orders</a></li>
             <li><a href="#" class="sidebar-link"><i class="fas fa-clipboard-list"></i> Order Details</a></li>
             <li><a href="#" class="sidebar-link"><i class="fas fa-file-alt"></i> Reports</a></li>
             <li><a href="#" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a></li>
@@ -128,7 +112,7 @@ if ($productQuery) {
 
     <!-- Scripts -->
     <script>
-        // Dropdown toggle for categories and products
+        // Dropdown toggle for categories
         document.querySelectorAll('.dropdown-toggle').forEach(function(el) {
             el.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -136,7 +120,7 @@ if ($productQuery) {
             });
         });
 
-        // Sidebar link active state toggle
+        // Sidebar link active state
         document.querySelectorAll('.sidebar-link').forEach(function(link) {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
@@ -144,7 +128,7 @@ if ($productQuery) {
             });
         });
 
-        // Topnav menu active state toggle
+        // Topnav link active state
         document.querySelectorAll('.topnav-menu .nav-link').forEach(function(link) {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.topnav-menu .nav-link').forEach(el => el.classList.remove('active'));

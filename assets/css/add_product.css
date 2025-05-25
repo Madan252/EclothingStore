@@ -1,0 +1,260 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    overflow: hidden;
+}
+
+form#addProductForm {
+    background: #ffffff;
+    width: 1200px;
+    max-width: 95%;
+    max-height: 90vh;
+    padding: 40px 50px;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    position: relative;
+    overflow-y: auto;
+    animation: fadeIn 0.6s ease;
+    transition: 0.3s ease;
+}
+
+/* Scrollbar styling */
+form#addProductForm::-webkit-scrollbar {
+    width: 10px;
+}
+
+form#addProductForm::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 8px;
+}
+
+form#addProductForm::-webkit-scrollbar-thumb {
+    background: #b39ddb;
+    border-radius: 8px;
+}
+
+form#addProductForm::-webkit-scrollbar-thumb:hover {
+    background: #7e57c2;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+    color: #6a1b9a;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 18px 20px;
+    border: 2px solid #d1c4e9;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #fafafa;
+    color: #333;
+    transition: 0.3s ease;
+    resize: vertical;
+    appearance: none;
+    outline: none;
+}
+
+.form-group select {
+    background: #fafafa url('data:image/svg+xml;utf8,<svg fill="%236a1b9a" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 20px center;
+    background-size: 16px 16px;
+    padding-right: 48px;
+}
+
+.form-group select option {
+    background-color: #fff;
+    color: #333;
+}
+
+.form-group label {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    font-size: 14px;
+    color: #777;
+    background: #fff;
+    padding: 0 6px;
+    transition: 0.3s ease;
+    pointer-events: none;
+}
+
+.form-group input:focus + label,
+.form-group input:not(:placeholder-shown) + label,
+.form-group textarea:focus + label,
+.form-group textarea:not(:placeholder-shown) + label,
+.form-group select:focus + label,
+.form-group select:valid + label {
+    top: -10px;
+    font-size: 12px;
+    color: #6a1b9a;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: #6a1b9a;
+    background-color: #fff;
+}
+
+/* File Input */
+input[type="file"] {
+    padding: 14px;
+    font-size: 15px;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+    border: 2px dashed #c5cae9;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+input[type="file"]:hover {
+    border-color: #7e57c2;
+}
+
+input[type="file"]::file-selector-button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #6a1b9a;
+    color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background-color: #4a148c;
+}
+
+/* Buttons */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+    gap: 20px;
+}
+
+.button-group button {
+    flex: 1;
+    padding: 16px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-group button[type="submit"] {
+    background-color: #6a1b9a;
+    color: white;
+}
+
+.button-group button[type="submit"]:hover {
+    background-color: #4a148c;
+    transform: scale(1.03);
+}
+
+.button-group .cancel-btn {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.button-group .cancel-btn:hover {
+    background-color: #bdbdbd;
+    transform: scale(1.03);
+}
+
+/* Inline layout for short fields */
+.inline-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.inline-group .form-group {
+    flex: 1;
+}
+
+/* Close Button */
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 24px;
+    color: #aaa;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: 0.3s ease;
+}
+
+.close-btn:hover {
+    color: #000;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+}
+
+/* Mobile & Tablet */
+@media (max-width: 1024px) {
+    form#addProductForm {
+        width: 95%;
+        padding: 30px;
+        max-height: 95vh;
+    }
+
+    .inline-group {
+        flex-direction: column;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .button-group button {
+        width: 100%;
+    }
+}
+.button-group .view-btn {
+    background-color: #4caf50;
+    color: white;
+}
+
+.button-group .view-btn:hover {
+    background-color: #388e3c;
+    transform: scale(1.03);
+}

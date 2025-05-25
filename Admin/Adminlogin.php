@@ -5,8 +5,9 @@ ini_set('display_errors', 1);
 
 if (isset($_POST['login'])) {
     $email = $_POST['email'];
-    $password = md5($_POST['password']); // Consider using password_hash() in future
+    $password = md5($_POST['password']); // Using MD5 as requested
 
+    // Database connection
     $con = mysqli_connect("localhost", "root", "", "eclothingstore");
 
     if ($con) {
@@ -32,10 +33,10 @@ if (isset($_POST['login'])) {
             header("Location: Admindashboard.php");
             exit();
         } else {
-            echo "<script>alert('Invalid email or password!');</script>";
+            $error = "Invalid email or password!";
         }
     } else {
-        echo "<script>alert('Database connection failed!');</script>";
+        $error = "Database connection failed!";
     }
 }
 ?>
@@ -53,6 +54,10 @@ if (isset($_POST['login'])) {
     <div class="wrapper">
         <form action="Adminlogin.php" method="POST">
             <h1>E-Clothing Store</h1>
+
+            <?php if (isset($error)) : ?>
+                <div style="color: red; text-align: center; margin-bottom: 10px;"><?php echo $error; ?></div>
+            <?php endif; ?>
 
             <div class="input-box">
                 <i class='bx bxs-user'></i>
