@@ -1,0 +1,197 @@
+* {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f4f6f8;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    /* Header */
+    .topnav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #111;
+        color: #fff;
+        padding: 15px 30px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+        font-size: 1.6rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .logo i {
+        color: #f97316;
+    }
+
+    .topnav-menu {
+        display: flex;
+        gap: 20px;
+    }
+
+    .nav-link {
+        color: #ccc;
+        font-size: 0.95rem;
+        transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        color: #fff;
+        font-weight: 600;
+        text-shadow: 0 0 8px #f97316;
+    }
+
+    .logout-link {
+        color: #ff5252;
+    }
+
+    .welcome-msg {
+        font-size: 0.9rem;
+    }
+
+    /* Page Name Display */
+    .page-name-banner {
+        background-color: #f97316;
+        color: #fff;
+        text-align: center;
+        padding: 15px 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Main Content */
+    .main-content {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .project-description-box {
+        background: #fff;
+        padding: 30px;
+        flex:left;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        margin-bottom: 40px;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .project-description-box:hover {
+        box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+    }
+
+    .project-description-box h1 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: #1a1a1a;
+    }
+
+    /* Info Section */
+    .info-section {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 60px;
+    }
+
+    .info-box {
+        flex: 1 1 300px;
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .info-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 20px rgba(249, 115, 22, 0.25);
+    }
+
+    .info-box h2 {
+        color: #1a1a1a;
+        margin-bottom: 10px;
+    }
+
+    .info-box p,
+    .info-box ul {
+        font-size: 0.95rem;
+        color: #555;
+    }
+
+    .info-box ul {
+        padding-left: 20px;
+    }
+
+    /* Team Section */
+    .team-title {
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 30px;
+        color: #1a1a1a;
+    }
+
+    .team-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 25px;
+    }
+
+    .team-member {
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        width: 240px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .team-member:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 0 18px rgba(249, 115, 22, 0.25);
+    }
+
+    .profile-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #ddd;
+        margin-bottom: 15px;
+        transition: border-color 0.3s ease;
+    }
+
+    .team-member:hover .profile-img {
+        border-color: #f97316;
+    }
+
+    /* Footer */
+    .footer {
+        background-color: #111;
+        color: #ccc;
+        text-align: center;
+        padding: 20px 0;
+        margin-top: 60px;
+        font-size: 0.9rem;
+    }

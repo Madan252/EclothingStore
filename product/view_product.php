@@ -1,4 +1,5 @@
 <?php
+include(__DIR__ . '/../Sidebar/Header.php');
 // Database connection inside this file
 $con = mysqli_connect("localhost", "root", "", "eclothingstore");
 if (!$con) {
@@ -58,7 +59,7 @@ $result = mysqli_query($con, $query);
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
-
+<main class="main-content"> 
 <h1 class="page-title"><i class="fas fa-boxes"></i> All Products</h1>
 
 <!-- Search Form -->
@@ -188,7 +189,8 @@ $result = mysqli_query($con, $query);
         </form>
     </div>
 </div>
-
+            </main>
+<?php include(__DIR__ . '/../Sidebar/Footer.php'); ?>
 <script>
 // View Modal
 function openViewModal(btn) {

@@ -10,26 +10,13 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['email'];
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>About Us - E-Clothing Store</title>
-    <link rel="stylesheet" href="../assets/css/aboutus.css">
+    <title> </title>
+    <link rel="stylesheet" href="../Webpage/css/Aboutus.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
-    <header class="topnav">
-        <div class="logo">
-            <i class="fas fa-tshirt"></i> <span>E-Clothing Store</span>
-        </div>
-        <nav class="topnav-menu">
-            <a href="../Admin/Admindashboard.php" class="nav-link">Home</a>
-            <a href="aboutus.php" class="nav-link active">About Us</a>
-            <a href="#" class="nav-link">Contact Us</a>
-            <a href="#" class="nav-link">Help</a>
-            <a href="Logout.php" class="nav-link logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </nav>
-        <div class="welcome-msg">
-            <i class="fas fa-user-circle"></i> Welcome, <strong><?php echo htmlspecialchars($adminName); ?></strong>
-        </div>
-    </header>
+
+     <?php include '../Webpage/Home/header.php'; ?>
 
     <main class="main-content">
         <section class="project-description-box">

@@ -31,6 +31,8 @@ $uniqueUsers = mysqli_fetch_assoc($uniqueUsersResult)['total'] ?? 0;
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
+      <?php include '../Sidebar/Header.php'; ?>
+      <main class="main-content">
   <div class="orders-page">
     <header class="header">
       <h1><i class="fas fa-shopping-cart"></i> Customer Orders</h1>
@@ -88,5 +90,7 @@ $uniqueUsers = mysqli_fetch_assoc($uniqueUsersResult)['total'] ?? 0;
       <?php endif; ?>
     </section>
   </div>
+      </main>
+       <?php include '../Sidebar/Footer.php'; ?>
 </body>
 </html>
