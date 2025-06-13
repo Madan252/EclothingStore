@@ -58,17 +58,25 @@ $res_free = mysqli_query($con, $sql_free);
 $query = "SELECT * FROM product WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)";
 $res = mysqli_query($con, $query);
 
+$sql = "SELECT p.*, c.name AS category_name 
+            FROM product p
+            LEFT JOIN category c ON p.category_id = c.id
+            ORDER BY p.id DESC";
+$res= mysqli_query($con, $sql);
+
 $newProducts = [];
 
 while ($row = mysqli_fetch_assoc($res)) {
     $newProducts[] = [
         'image' => htmlspecialchars($row['image']),
-        'category_id' => htmlspecialchars($row['category_id']),
+        'category_id' => htmlspecialchars($row['category_id']),     // Numeric ID from product table
+        'category' => htmlspecialchars($row['category_name']),       // Name from joined category table
         'name' => htmlspecialchars($row['name']),
         'description' => htmlspecialchars($row['description']),
         'price' => htmlspecialchars($row['price']),
     ];
 }
+
 ?>
 
  
@@ -347,13 +355,14 @@ while ($row = mysqli_fetch_assoc($res)) {
         <div class="container-fluid service py-5">
             <div class="container py-5">
                 <div class="row g-4 justify-content-center">
+                    <h1>Sepcial Offer</h1>
                     <div class="col-md-6 col-lg-4">
                         <a href="#">
                             <div class="service-item bg-secondary rounded border border-secondary">
-                                <img src="design-assets/img/featur-1.jpg" class="img-fluid rounded-top w-100" alt="">
+                                <img src="design-assets/img/womenblazer.jpg" class="img-fluid rounded-top w-100" alt="">
                                 <div class="px-4 rounded-bottom">
                                     <div class="service-content bg-primary text-center p-4 rounded">
-                                        <h5 class="text-white">Fresh Apples</h5>
+                                        <h5 class="text-white"> New Clothes</h5>
                                         <h3 class="mb-0">20% OFF</h3>
                                     </div>
                                 </div>
@@ -363,7 +372,7 @@ while ($row = mysqli_fetch_assoc($res)) {
                     <div class="col-md-6 col-lg-4">
                         <a href="#">
                             <div class="service-item bg-dark rounded border border-dark">
-                                <img src="design-assets/img/featur-2.jpg" class="img-fluid rounded-top w-100" alt="">
+                                <img src="design-assets/img/weddingdress.webp" class="img-fluid rounded-top w-100" alt="">
                                 <div class="px-4 rounded-bottom">
                                     <div class="service-content bg-light text-center p-4 rounded">
                                         <h5 class="text-primary">Brand clothes</h5>
@@ -376,10 +385,10 @@ while ($row = mysqli_fetch_assoc($res)) {
                     <div class="col-md-6 col-lg-4">
                         <a href="#">
                             <div class="service-item bg-primary rounded border border-primary">
-                                <img src="design-assets/img/featur-3.jpg" class="img-fluid rounded-top w-100" alt="">
+                                <img src="design-assets/img/blazersformen.jpeg" class="img-fluid rounded-top w-100" alt="">
                                 <div class="px-4 rounded-bottom">
                                     <div class="service-content bg-secondary text-center p-4 rounded">
-                                        <h5 class="text-white">Exotic Vegitable</h5>
+                                        <h5 class="text-white">Regular Costumer</h5>
                                         <h3 class="mb-0">Discount 30$</h3>
                                     </div>
                                 </div>
@@ -394,6 +403,7 @@ while ($row = mysqli_fetch_assoc($res)) {
 
         <!-- Vesitable Shop Start-->
        <div class="container-fluid vesitable py-5">
+   <div class="container-fluid vesitable py-5">
     <div class="container py-5">
         <h1 class="mb-0">New Products</h1>
         <div class="owl-carousel vegetable-carousel justify-content-center">
@@ -408,7 +418,7 @@ while ($row = mysqli_fetch_assoc($res)) {
 
                     <div class="text-white bg-primary px-3 py-1 rounded position-absolute" 
                          style="top: 10px; right: 10px;">
-                        <?php echo $product['category_id']; ?>
+                        <?php echo $product['category']; // Show category name ?>
                     </div>
 
                     <div class="p-4 rounded-bottom">
@@ -418,7 +428,7 @@ while ($row = mysqli_fetch_assoc($res)) {
 
                         <div class="d-flex justify-content-between flex-lg-wrap">
                             <p class="text-dark fs-5 fw-bold mb-0">
-                                $<?php echo $product['price']; ?> / kg
+                                $<?php echo $product['price']; ?>  
                             </p>
 
                             <a href="#" 
@@ -433,6 +443,8 @@ while ($row = mysqli_fetch_assoc($res)) {
             <?php endforeach; ?>
         </div>
     </div>
+</div>
+
 </div>
       
                
