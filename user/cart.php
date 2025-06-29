@@ -1,46 +1,37 @@
 <?php
+// File: cart.php
 session_start();
-$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+include("includes/header.php");
 
+
+$cart = $_SESSION['cart'] ?? [];
+
+$con = mysqli_connect("localhost", "root", "", "E_Clothing_Store");
+if (!$con) {
+    die("Database connection failed: " . mysqli_connect_error());
+}
+
+$products = [];
+if ($cart) {
+    $ids = implode(',', array_map('intval', array_keys($cart)));
+    $sql = "SELECT id, name, price, image, quantity AS stock FROM product WHERE id IN ($ids) AND deleted_at IS NULL";
+    $res = mysqli_query($con, $sql);
+    while ($row = mysqli_fetch_assoc($res)) {
+        $products[$row['id']] = $row;
+    }
+}
+mysqli_close($con);
 ?>
-
-<!DOCTYPE html>
-<html>
-   <head>
-        <meta charset="utf-8">
-        <title>Fruitables - Vegetable Website Template</title>
-        <meta content="width=device-width, initial-scale=1.0" name="viewport">
-        <meta content="" name="keywords">
-        <meta content="" name="description">
-
-        <!-- Google Web Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Raleway:wght@600;800&display=swap" rel="stylesheet"> 
-
-        <!-- Icon Font Stylesheet -->
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-
-        <!-- Libraries Stylesheet -->
-        <link href="../design-assets/lib/lightbox/css/lightbox.min.css" rel="stylesheet">
-        <link href="../design-assets/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-
-
-        <!-- Customized Bootstrap Stylesheet -->
-        <link href="../design-assets/design-assets/css/bootstrap.min.css" rel="stylesheet">
-
-        <!-- Template Stylesheet -->
-        <link href="../design-assets/design-assets/css/style.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-<body>
+<br><br><br><br><br>
 <div class="container mt-5">
-    <h2>Your Shopping Cart</h2>
+    <h2 class="mb-4"><i class="fas fa-shopping-cart"></i> Your Shopping Cart</h2>
     <?php if (empty($cart)): ?>
-        <p class="text-muted">Your cart is empty.</p>
+        <p class="text-muted">Your cart is empty. Redirecting to homepage...</p>
+        <script>
+            setTimeout(() => window.location.href = '../index.php', 1000);
+        </script>
     <?php else: ?>
-        <table class="table table-bordered text-center">
+        <table class="table table-bordered text-center align-middle">
             <thead class="table-dark">
                 <tr>
                     <th>Product</th>
@@ -52,36 +43,84 @@ $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
                 </tr>
             </thead>
             <tbody>
-                <?php 
-                $grandTotal = 0;
-                foreach ($cart as $item): 
-                    $total = $item['price'] * $item['quantity'];
+                <?php $grandTotal = 0; ?>
+                <?php foreach ($cart as $id => $item): ?>
+                    <?php
+                    if (!isset($products[$id])) continue;
+                    $product = $products[$id];
+                    $price = (float) $product['price'];
+                    $quantity = (int) $item['quantity'];
+                    $stock = (int) $product['stock'];
+
+                    if ($quantity > $stock) {
+                        $_SESSION['cart'][$id]['quantity'] = $stock;
+                        $quantity = $stock;
+                    }
+                    $total = $price * $quantity;
                     $grandTotal += $total;
-                ?>
+                    ?>
                     <tr>
-                        <td><img src="../assets/images/<?php echo $item['image']; ?>" width="70"></td>
-                        <td><?php echo $item['name']; ?></td>
-                        <td>$<?php echo $item['price']; ?></td>
+                        <td><img src="../assets/images/<?php echo htmlspecialchars($product['image']); ?>" class="img-fluid" style="max-width: 100px;"></td>
+                        <td><?php echo htmlspecialchars($product['name']); ?></td>
+                        <td>Rs <?php echo number_format($price, 2); ?></td>
                         <td>
                             <div class="d-flex justify-content-center align-items-center">
-                            <a href="update_quantity.php?id=<?php echo $item['id']; ?>&action=decrease" class="btn btn-sm btn-outline-secondary me-2">-</a>
-                                <?php echo $item['quantity']; ?>
-                                <a href="update_quantity.php?id=<?php echo $item['id']; ?>&action=increase" class="btn btn-sm btn-outline-secondary ms-2">+</a>
+                                <button class="btn btn-sm btn-outline-secondary me-2 btn-decrease" data-id="<?php echo $id; ?>">-</button>
+                                <span id="qty-<?php echo $id; ?>"><?php echo $quantity; ?></span>
+                                <button class="btn btn-sm btn-outline-secondary ms-2 btn-increase" data-id="<?php echo $id; ?>">+</button>
                             </div>
+                            <div class="text-muted small mt-1">(Stock: <?php echo $stock; ?>)</div>
                         </td>
-
-                        <td>$<?php echo $total; ?></td>
-                        <td><a href="remove_from_cart.php?id=<?php echo $item['id']; ?>" class="btn btn-danger btn-sm">X</a></td>
+                        <td id="total-<?php echo $id; ?>">Rs <?php echo number_format($total, 2); ?></td>
+                        <td><a href="remove_from_cart.php?id=<?php echo $id; ?>" class="btn btn-danger btn-sm">X</a></td>
                     </tr>
                 <?php endforeach; ?>
                 <tr>
                     <td colspan="4" class="text-end fw-bold">Grand Total</td>
-                    <td colspan="2" class="fw-bold text-success">$<?php echo $grandTotal; ?></td>
+                    <td colspan="2" class="fw-bold text-success" id="grand-total">Rs <?php echo number_format($grandTotal, 2); ?></td>
                 </tr>
             </tbody>
         </table>
-        <a href="chackout.php" class="btn btn-success">Checkout</a>
+
+        <div class="d-flex justify-content-between">
+            <a href="../index.php" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
+            <a href="<?php echo isset($_SESSION['user_id']) ? 'chackout.php' : 'userlogin.php'; ?>" class="btn btn-success">Proceed to Checkout <i class="fas fa-arrow-right"></i></a>
+        </div>
     <?php endif; ?>
 </div>
-</body>
-</html>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(function () {
+        function updateQuantity(productId, action) {
+            $.ajax({
+                url: 'update_quantity.php',
+                type: 'POST',
+                data: { id: productId, action: action },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status === 'success') {
+                        $('#qty-' + productId).text(response.quantity);
+                        $('#total-' + productId).text("Rs " + response.item_total);
+                        $('#grand-total').text("Rs " + response.grand_total);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Failed to update quantity");
+                }
+            });
+        }
+
+        $('.btn-increase').click(function () {
+            const id = $(this).data('id');
+            updateQuantity(id, 'increase');
+        });
+
+        $('.btn-decrease').click(function () {
+            const id = $(this).data('id');
+            updateQuantity(id, 'decrease');
+        });
+    });
+</script>
+<?php include("includes/footer.php"); ?>

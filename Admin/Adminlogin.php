@@ -1,42 +1,38 @@
 <?php
 session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+$con = mysqli_connect("localhost", "root", "", "E_Clothing_Store");
+if (!$con) {
+    die("Connection failed: " . mysqli_connect_error());
+}
 
-if (isset($_POST['login'])) {
-    $email = $_POST['email'];
-    $password = md5($_POST['password']); // Using MD5 as requested
+$error = '';
 
-    // Database connection
-    $con = mysqli_connect("localhost", "root", "", "eclothingstore");
+if (isset($_POST['adminlogin'])) {
+    $email = trim($_POST['email']);
+    $password = md5(trim($_POST['password'])); 
 
-    if ($con) {
-        $email_safe = mysqli_real_escape_string($con, $email);
-        $sql = "SELECT * FROM user WHERE email='$email_safe' AND password='$password' AND deleted_at IS NULL";
-        $res = mysqli_query($con, $sql);
+    $query = "SELECT * FROM user WHERE email = '$email' AND password = '$password' AND deleted_at IS NULL AND user_type = 'admin'";
+    $result = mysqli_query($con, $query);
 
-        if ($res && mysqli_num_rows($res) > 0) {
-            $user = mysqli_fetch_assoc($res);
+    if ($result && mysqli_num_rows($result) === 1) {
+        $admin = mysqli_fetch_assoc($result);
 
-            // Set session
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['admin_name'] = $user['name'];
+        $_SESSION['admin_id'] = $admin['id'];
+        $_SESSION['admin_name'] = $admin['name'];
+        $_SESSION['admin_email'] = $admin['email'];
+        $_SESSION['admin_type'] = $admin['user_type'];
+        $_SESSION['admin_image'] = $admin['image'];
 
-            // Remember Me
-            if (!empty($_POST['remember'])) {
-                setcookie("email", $email, time() + (86400 * 30), "/");
-            } else {
-                setcookie("email", "", time() - 3600, "/");
-            }
-
-            // Redirect to dashboard
-            header("Location: Admindashboard.php");
-            exit();
+        if (!empty($_POST['remember'])) {
+            setcookie("admin_email", $email, time() + (86400 * 30), "/"); // 30 days
         } else {
-            $error = "Invalid email or password!";
+            setcookie("admin_email", "", time() - 3600, "/");
         }
+
+        header("Location: Admindashboard.php");
+        exit();
     } else {
-        $error = "Database connection failed!";
+        $error = "Invalid admin credentials!";
     }
 }
 ?>
@@ -45,53 +41,62 @@ if (isset($_POST['login'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Admin Login - E Clothing Store</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+    <title>Admin Login - E-Clothing Store</title>
     <link rel="stylesheet" href="../assets/css/style.css" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
 </head>
 <body>
-    <div class="wrapper">
-        <form action="Adminlogin.php" method="POST">
-            <h1>E-Clothing Store</h1>
+    <form class="authForm" action="" method="post" novalidate>
+        <h2>E-Clothing Store</h2>
 
-            <?php if (isset($error)) : ?>
-                <div style="color: red; text-align: center; margin-bottom: 10px;"><?php echo $error; ?></div>
-            <?php endif; ?>
+        <?php if ($error): ?>
+            <p style="color: red; font-weight: 600;"><?php echo htmlspecialchars($error); ?></p>
+        <?php endif; ?>
 
-            <div class="input-box">
-                <i class='bx bxs-user'></i>
-                <input type="email" name="email" placeholder="Email" required
-                       value="<?php echo isset($_COOKIE['email']) ? htmlspecialchars($_COOKIE['email']) : ''; ?>" />
-            </div>
+        <div class="form-group">
+            <input type="email" name="email" id="email" placeholder=" " required
+                value="<?php echo isset($_COOKIE['admin_email']) ? htmlspecialchars($_COOKIE['admin_email']) : ''; ?>" />
+            <label for="email">Email</label>
+        </div>
 
-            <div class="input-box password-box">
-                <i class='bx bxs-lock-alt'></i>
-                <input type="password" name="password" id="password" placeholder="Password" required />
-                <i class='bx bx-show toggle-icon' id="togglePassword"></i>
-            </div>
+        <div class="form-group" style="position: relative;">
+        <i class="bx bx-show toggle-icon" id="togglePassword"></i>
+            <input type="password" name="password" id="password" placeholder=" " required />
+            <label for="password">Password</label>
+        </div>
 
-            <div class="remember-forgot">
-                <label>
-                    <input type="checkbox" name="remember" <?php echo isset($_COOKIE['email']) ? 'checked' : ''; ?> />
-                    Remember me
-                </label>
-            </div>
+        <div class="form-options">
+            <label>
+                <input type="checkbox" name="remember" <?php if (isset($_COOKIE['admin_email'])) echo 'checked'; ?> />
+                Remember me
+            </label>
+            <a href="forgotpassword.php">Forgot Password?</a>
+        </div>
 
-            <button type="submit" name="login" class="btn">Login</button>
-        </form>
-    </div>
+        <div class="button-group">
+            <button type="submit" name="adminlogin">Login</button>
+        </div>
+
+    </form>
 
     <script>
         const togglePassword = document.getElementById("togglePassword");
         const passwordInput = document.getElementById("password");
 
-        togglePassword.addEventListener("click", function () {
+        togglePassword.addEventListener("click", () => {
             const type = passwordInput.type === "password" ? "text" : "password";
             passwordInput.type = type;
-            this.classList.toggle("bx-show");
-            this.classList.toggle("bx-hide");
+            togglePassword.classList.toggle('bx-show');
+            togglePassword.classList.toggle('bx-hide');
         });
+
+        togglePassword.addEventListener("keydown", e => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                togglePassword.click();
+            }
+        });
+
     </script>
 </body>
 </html>
