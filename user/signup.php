@@ -63,15 +63,12 @@ if (isset($_POST['signup'])) {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <title>User Signup</title>
     <link rel="stylesheet" href="../assets/css/signup.css" />
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-
 <body>
     <form class="authForm" action="" method="post" enctype="multipart/form-data" novalidate>
         <h2>User Signup</h2>
@@ -116,27 +113,9 @@ if (isset($_POST['signup'])) {
             <a href="Userlogin.php" id="backToLogin" class="cancel-btn"
                 style="text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; margin-top: 10px;">Back to Login</a>
         </div>
-
-        <!-- Google Sign Up Button at the bottom -->
-        <div style="text-align: center; margin-top: 25px;">
-            <div id="g_id_onload"
-                data-client_id="743361665961-vinqrjm4md449kiu3lqehqi92c8bd5mq.apps.googleusercontent.com"
-                data-callback="handleCredentialResponse"
-                data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin"
-                data-type="standard"
-                data-shape="rectangular"
-                data-theme="outline"
-                data-text="signup_with"
-                data-size="large"
-                data-logo_alignment="left">
-            </div>
-        </div>
     </form>
 
     <script>
-        // Toggle password visibility
         function toggleVisibility(toggleId, inputId) {
             const toggleIcon = document.getElementById(toggleId);
             const inputField = document.getElementById(inputId);
@@ -159,7 +138,6 @@ if (isset($_POST['signup'])) {
         toggleVisibility("togglePassword", "password");
         toggleVisibility("toggleConfirmPassword", "confirm_password");
 
-        // Back to login with email passed via URL
         document.getElementById("backToLogin").addEventListener("click", function (e) {
             e.preventDefault();
             const emailValue = document.getElementById("email").value.trim();
@@ -169,34 +147,6 @@ if (isset($_POST['signup'])) {
             }
             window.location.href = loginUrl;
         });
-
-        // Google Sign-In callback
-        function handleCredentialResponse(response) {
-            const idToken = response.credential;
-
-            // Send ID token to backend for verification and login/signup
-            fetch('../auth/google-callback.php', { // adjust path if needed
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id_token: idToken })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Google login successful! Redirecting...');
-                    window.location.href = '../index.php'; // change to your landing page
-                } else {
-                    alert('Google login failed: ' + data.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Google login error, please try again.');
-            });
-        }
     </script>
 </body>
-
 </html>

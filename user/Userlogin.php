@@ -7,6 +7,7 @@ if (!$con) {
 }
 
 $error = '';
+$success = '';
 
 if (isset($_POST['login'])) {
     $email = trim($_POST['email']);
@@ -30,7 +31,12 @@ if (isset($_POST['login'])) {
             setcookie("email", "", time() - 3600, "/");
         }
 
-        $redirectUrl = '../index.php';
+        $success = "Login successful! Redirecting...";
+        
+        // Determine redirect URL
+        $redirectUrl = '../index.php'; // Default
+        
+        // Check for redirect parameter first
         if (isset($_GET['redirect']) && !empty($_GET['redirect'])) {
             $allowedPages = ['chackout.php', 'index.php'];
             $requestedPage = basename($_GET['redirect']);
@@ -38,11 +44,22 @@ if (isset($_POST['login'])) {
                 $redirectUrl = ($requestedPage == 'chackout.php') ? 'chackout.php' : '../index.php';
             }
         }
-
-        header("Location: " . $redirectUrl);
-        exit();
+        // If no redirect parameter, check HTTP referer
+        elseif (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'login.php') === false) {
+            $referer = parse_url($_SERVER['HTTP_REFERER']);
+            if ($referer['host'] === $_SERVER['HTTP_HOST']) {
+                $redirectUrl = $_SERVER['HTTP_REFERER'];
+            }
+        }
+        
+        // Add JavaScript for redirection
+        echo '<script>
+            setTimeout(function() {
+                window.location.href = "' . $redirectUrl . '";
+            }, 2000);
+        </script>';
     } else {
-        $error = "Invalid User credentials!";
+        $error = "Invalid email or password!";
     }
 }
 ?>
@@ -52,16 +69,42 @@ if (isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <title>User Login - E-Clothing Store</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        .message-container {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .error-msg {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ef9a9a;
+        }
+        .success-msg {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+    </style>
 </head>
 <body>
     <form class="authForm" action="" method="post" novalidate>
         <h2>E-Clothing Store</h2>
 
         <?php if ($error): ?>
-            <p class="error-msg"><?php echo htmlspecialchars($error); ?></p>
+            <div class="message-container error-msg">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($success): ?>
+            <div class="message-container success-msg">
+                <?php echo htmlspecialchars($success); ?>
+            </div>
         <?php endif; ?>
 
         <div class="form-group">
@@ -134,15 +177,44 @@ if (isset($_POST['login'])) {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert('Google login successful! Redirecting...');
-                    window.location.href = '../index.php';
+                    // Create success message element
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message-container success-msg';
+                    messageDiv.textContent = 'Google login successful! Redirecting...';
+                    
+                    // Insert message at the top of the form
+                    const form = document.querySelector('.authForm');
+                    form.insertBefore(messageDiv, form.firstChild);
+                    
+                    // Redirect to previous page or index.php
+                    const redirectUrl = document.referrer && !document.referrer.includes('login.php') 
+                                      ? document.referrer 
+                                      : '../index.php';
+                    
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 2000);
                 } else {
-                    alert('Google login failed: ' + data.message);
+                    // Create error message element
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message-container error-msg';
+                    messageDiv.textContent = 'Google login failed: ' + data.message;
+                    
+                    // Insert message at the top of the form
+                    const form = document.querySelector('.authForm');
+                    form.insertBefore(messageDiv, form.firstChild);
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('Google login error, please try again.');
+                // Create error message element
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-container error-msg';
+                messageDiv.textContent = 'Google login error, please try again.';
+                
+                // Insert message at the top of the form
+                const form = document.querySelector('.authForm');
+                form.insertBefore(messageDiv, form.firstChild);
             });
         }
     </script>
