@@ -20,7 +20,7 @@ if (isset($_POST['submit'])) {
     } elseif (!preg_match("/^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/", $pass)) {
         $error = "Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, and one special character.";
     } else {
-        $sql = "UPDATE user SET password = '" . md5($pass) . "' WHERE id = " . intval($user_id);
+        $sql = "UPDATE users SET password = '" . md5($pass) . "' WHERE id = " . intval($user_id);
         $res = mysqli_query($con, $sql);
         if ($res) {
             header("Location: Userlogin.php");

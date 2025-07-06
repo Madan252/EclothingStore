@@ -15,16 +15,27 @@ if (!$con) {
 $res = mysqli_query($con, "SELECT COUNT(*) AS total FROM product WHERE deleted_at IS NULL");
 $totalProducts = mysqli_fetch_assoc($res)['total'] ?? 0;
 
-$res = mysqli_query($con, "SELECT COUNT(*) AS total FROM user WHERE user_type = 'user' AND deleted_at IS NULL");
+$res = mysqli_query($con, "SELECT COUNT(*) AS total FROM users WHERE user_type = 'user' AND deleted_at IS NULL");
 $totalUsers = mysqli_fetch_assoc($res)['total'] ?? 0;
 
 $res = mysqli_query($con, "SELECT COUNT(*) AS total FROM orders WHERE order_status='pending' AND deleted_at IS NULL");
 $pendingOrders = mysqli_fetch_assoc($res)['total'] ?? 0;
 
-$res = mysqli_query($con, "SELECT SUM(od.quantity * od.unit_price) AS total FROM orderdetail od");
+$res = mysqli_query($con, "SELECT SUM(od.quantity * od.unit_price) + SUM(o.shipping_charge) AS total 
+                           FROM orderdetail od 
+                           JOIN orders o ON od.order_id = o.id 
+                           WHERE o.deleted_at IS NULL 
+                             AND o.order_status = 'Delivered'");
+
 $totalRevenue = mysqli_fetch_assoc($res)['total'] ?? 0;
 
 $adminName = $_SESSION['admin_name'] ?? $_SESSION['admin_email'];
+
+$storeSettingsQuery = mysqli_query($con, "SELECT store_name, store_logo FROM store_settings ORDER BY id DESC LIMIT 1");
+$storeSettings = mysqli_fetch_assoc($storeSettingsQuery);
+
+$storeName = $storeSettings['store_name'] ?? "E-Clothing Store";
+$storeLogo = $storeSettings['store_logo'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,8 +50,16 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['admin_email'];
 
 <header class="topnav">
     <div class="logo">
-        <i class="fas fa-tshirt"></i> E-Clothing Store
-    </div>
+    <?php if ($storeLogo): ?>
+        <img src="../assets/images/<?= htmlspecialchars($storeLogo) ?>" 
+             alt="<?= htmlspecialchars($storeName) ?> Logo" 
+             style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px;">
+    <?php else: ?>
+        <i class="fas fa-tshirt"></i>
+    <?php endif; ?>
+    <?= htmlspecialchars($storeName) ?>
+</div>
+
     <nav class="topnav-menu">
         <a href="Admindashboard.php" class="nav-link active">Home</a>
         <a href="logout.php" class="nav-link logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -77,8 +96,9 @@ $adminName = $_SESSION['admin_name'] ?? $_SESSION['admin_email'];
         <li><a href="customers.php" class="sidebar-link"><i class="fas fa-users"></i> Customers</a></li>
         <li><a href="Adminorders.php" class="sidebar-link"><i class="fas fa-shopping-cart"></i> Orders</a></li>
         <li><a href="orderdetails.php" class="sidebar-link"><i class="fas fa-clipboard-list"></i> Order Details</a></li>
-        <li><a href="#" class="sidebar-link"><i class="fas fa-file-alt"></i> Reports</a></li>
-        <li><a href="#" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a></li>
+         <li><a href="product_rating_review.php" class="sidebar-link"><i class="fas fa-comment-dots"></i> Review</a></li>
+        <li><a href="report.php" class="sidebar-link"><i class="fas fa-file-alt"></i> Reports</a></li>
+        <li><a href="setting.php" class="sidebar-link"><i class="fas fa-cog"></i> Settings</a></li>
     </ul>
 </aside>
 

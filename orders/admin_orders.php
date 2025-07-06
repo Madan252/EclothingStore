@@ -18,23 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['o
     $order_status = mysqli_real_escape_string($con, $_POST['order_status']);
     $update_sql = "UPDATE orders SET order_status='$order_status' WHERE id=$order_id";
     mysqli_query($con, $update_sql);
-    header("Location: Adminorders.php?page=" . ($_GET['page'] ?? 1));
+    // Redirect to avoid form resubmission
+    header("Location: Adminorders.php");
     exit();
 }
 
-// Pagination setup
-$limit = 10;
-$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int) $_GET['page'] : 1;
-$offset = ($page - 1) * $limit;
-
-// Count total orders
-$count_sql = "SELECT COUNT(DISTINCT id) AS total FROM orders WHERE deleted_at IS NULL";
-$count_res = mysqli_query($con, $count_sql);
-$count_row = mysqli_fetch_assoc($count_res);
-$totalOrders = $count_row['total'];
-$totalPages = ceil($totalOrders / $limit);
-
-// Fetch paginated orders
+// Fetch orders with user and product details
 $sql = "
     SELECT 
         o.id AS order_id, o.name AS order_name, o.order_status, o.payment_method, o.created_at,
@@ -43,14 +32,14 @@ $sql = "
         SUM(od.quantity) AS total_quantity,
         SUM(od.unit_price * od.quantity) AS total_price
     FROM orders o
-    LEFT JOIN user u ON o.user_id = u.id
+    LEFT JOIN users u ON o.user_id = u.id
     LEFT JOIN orderdetail od ON od.order_id = o.id
     LEFT JOIN product p ON od.product_id = p.id
     WHERE o.deleted_at IS NULL
     GROUP BY o.id
     ORDER BY o.created_at ASC
-    LIMIT $limit OFFSET $offset
 ";
+
 $res = mysqli_query($con, $sql);
 ?>
 
@@ -65,31 +54,6 @@ $res = mysqli_query($con, $sql);
         table { margin-top: 20px; }
         th, td { vertical-align: middle !important; }
         .status-select { width: 150px; }
-
-        .pagination-controls {
-            margin-top: 30px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        .pagination-btn {
-            padding: 6px 15px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: background 0.3s;
-        }
-
-        .pagination-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .pagination-btn.disabled {
-            background-color: #cccccc;
-            pointer-events: none;
-        }
     </style>
 </head>
 <body>
@@ -121,7 +85,7 @@ $res = mysqli_query($con, $sql);
                     <td><?= (int)$order['total_quantity'] ?></td>
                     <td><?= number_format($order['total_price'], 2) ?></td>
                     <td>
-                        <form method="POST" action="Adminorders.php?page=<?= $page ?>" class="d-flex align-items-center gap-2">
+                        <form method="POST" action="Adminorders.php" class="d-flex align-items-center gap-2">
                             <input type="hidden" name="order_id" value="<?= $order['order_id'] ?>">
                             <select name="order_status" class="form-select status-select" onchange="this.form.submit()">
                                 <?php 
@@ -141,24 +105,6 @@ $res = mysqli_query($con, $sql);
             <?php endif; ?>
         </tbody>
     </table>
-
-    <!-- Pagination Controls -->
-    <div class="pagination-controls">
-        <?php if ($page > 1): ?>
-            <a href="?page=<?= $page - 1 ?>" class="pagination-btn">Back</a>
-            <?php if ($page < $totalPages): ?>
-                <a href="?page=<?= $page + 1 ?>" class="pagination-btn">Next</a>
-            <?php else: ?>
-                <a class="pagination-btn disabled">Next</a>
-            <?php endif; ?>
-        <?php else: ?>
-            <?php if ($totalPages > 1): ?>
-                <a href="?page=<?= $page + 1 ?>" class="pagination-btn">Next</a>
-            <?php else: ?>
-                <a class="pagination-btn disabled">Next</a>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
 
     <script src="../design-assets/js/bootstrap.bundle.min.js"></script>
 </body>

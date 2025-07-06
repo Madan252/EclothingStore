@@ -11,7 +11,7 @@ if (!$con) {
     if(isset($_POST['submit'])){
         $email = $_POST['email'];
 
-        $sql = "select * from user where email = '".$email."'";
+        $sql = "select * from users where email = '".$email."'";
         $res = mysqli_query($con, $sql);
         $row = mysqli_fetch_assoc($res);
         if($res->num_rows > 0){

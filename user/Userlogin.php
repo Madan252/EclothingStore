@@ -13,7 +13,7 @@ if (isset($_POST['login'])) {
     $email = trim($_POST['email']);
     $password = md5(trim($_POST['password'])); // For production, use password_hash()
 
-    $query = "SELECT * FROM user WHERE email = '$email' AND password = '$password' AND deleted_at IS NULL";
+    $query = "SELECT * FROM users WHERE email = '$email' AND password = '$password' AND deleted_at IS NULL";
     $result = mysqli_query($con, $query);
 
     if ($result && mysqli_num_rows($result) === 1) {
@@ -32,27 +32,21 @@ if (isset($_POST['login'])) {
         }
 
         $success = "Login successful! Redirecting...";
-        
-        // Determine redirect URL
-        $redirectUrl = '../index.php'; // Default
-        
-        // Check for redirect parameter first
+
+        $redirectUrl = '../index.php';
         if (isset($_GET['redirect']) && !empty($_GET['redirect'])) {
             $allowedPages = ['chackout.php', 'index.php'];
             $requestedPage = basename($_GET['redirect']);
             if (in_array($requestedPage, $allowedPages)) {
                 $redirectUrl = ($requestedPage == 'chackout.php') ? 'chackout.php' : '../index.php';
             }
-        }
-        // If no redirect parameter, check HTTP referer
-        elseif (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'login.php') === false) {
+        } elseif (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'login.php') === false) {
             $referer = parse_url($_SERVER['HTTP_REFERER']);
             if ($referer['host'] === $_SERVER['HTTP_HOST']) {
                 $redirectUrl = $_SERVER['HTTP_REFERER'];
             }
         }
-        
-        // Add JavaScript for redirection
+
         echo '<script>
             setTimeout(function() {
                 window.location.href = "' . $redirectUrl . '";
@@ -100,7 +94,7 @@ if (isset($_POST['login'])) {
                 <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
-        
+
         <?php if ($success): ?>
             <div class="message-container success-msg">
                 <?php echo htmlspecialchars($success); ?>
@@ -128,12 +122,12 @@ if (isset($_POST['login'])) {
             <button type="submit" name="login">Login</button>
         </div>
 
-        <p>Don't have an account? <a href="Signup.php">Sign Up</a></p>
+        <p>Don't have an account? <a href="signup.php">Sign Up</a></p>
 
         <!-- Google Login Button -->
         <div class="google-login">
             <div id="g_id_onload"
-                 data-client_id="743361665961-vinqrjm4md449kiu3lqehqi92c8bd5mq.apps.googleusercontent.com"
+                 data-client_id="731513726294-dtfa773a7fpbuhc4d543f20a36m7pt7n.apps.googleusercontent.com"
                  data-callback="handleCredentialResponse"
                  data-auto_prompt="false">
             </div>
@@ -169,52 +163,40 @@ if (isset($_POST['login'])) {
         function handleCredentialResponse(response) {
             const idToken = response.credential;
 
-            fetch('../auth/google-callback.php', {
+            fetch('googleloginhandler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_token: idToken })
             })
             .then(res => res.json())
             .then(data => {
+                const form = document.querySelector('.authForm');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-container';
+
                 if (data.success) {
-                    // Create success message element
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message-container success-msg';
+                    messageDiv.classList.add('success-msg');
                     messageDiv.textContent = 'Google login successful! Redirecting...';
-                    
-                    // Insert message at the top of the form
-                    const form = document.querySelector('.authForm');
                     form.insertBefore(messageDiv, form.firstChild);
-                    
-                    // Redirect to previous page or index.php
-                    const redirectUrl = document.referrer && !document.referrer.includes('login.php') 
-                                      ? document.referrer 
-                                      : '../index.php';
-                    
+
                     setTimeout(() => {
-                        window.location.href = redirectUrl;
+                        window.location.href = document.referrer && !document.referrer.includes('login.php')
+                            ? document.referrer
+                            : '../index.php';
                     }, 2000);
                 } else {
-                    // Create error message element
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message-container error-msg';
+                    messageDiv.classList.add('error-msg');
                     messageDiv.textContent = 'Google login failed: ' + data.message;
-                    
-                    // Insert message at the top of the form
-                    const form = document.querySelector('.authForm');
                     form.insertBefore(messageDiv, form.firstChild);
                 }
             })
             .catch(err => {
-                console.error(err);
-                // Create error message element
+                const form = document.querySelector('.authForm');
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message-container error-msg';
                 messageDiv.textContent = 'Google login error, please try again.';
-                
-                // Insert message at the top of the form
-                const form = document.querySelector('.authForm');
                 form.insertBefore(messageDiv, form.firstChild);
+                console.error(err);
             });
         }
     </script>

@@ -60,7 +60,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <div class="container px-0">
         <nav class="navbar navbar-light bg-white navbar-expand-xl">
             <a href="./../index.php" class="navbar-brand">
-                <h2 class="text-primary display-6">Clothes</h2>
+                <h2 class="text-primary display-6">E Clothing Store</h2>
                 <h3 class="mb-3 text-secondary">Buy now pay Latter</h3>
             </a>
             <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">

@@ -10,7 +10,7 @@ if (!$id) {
 }
 
 // Soft delete
-$query = "UPDATE user SET deleted_at = NOW() WHERE id = $id";
+$query = "UPDATE users SET deleted_at = NOW() WHERE id = $id";
 if (!mysqli_query($con, $query)) {
     die("Error deleting record: " . mysqli_error($con));
 }

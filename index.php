@@ -3,18 +3,17 @@ session_start();
 
 $cartCount = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
 
-
 $con = mysqli_connect("localhost", "root", "", "E_Clothing_Store");
 
 if (!$con) {
     die("Database connection failed: " . mysqli_connect_error());
 }
 
-// Fetch top 10 bestselling products (by order quantity)
-
+// Fetch top 10 bestselling products (by order quantity) with deleted_at condition
 $bestsql = "SELECT p.*, SUM(od.quantity) as total_sold
         FROM product p
         JOIN orderdetail od ON p.id = od.product_id
+        WHERE p.deleted_at IS NULL
         GROUP BY p.id
         ORDER BY total_sold DESC
         LIMIT 10";
@@ -25,26 +24,27 @@ while ($row = mysqli_fetch_assoc($result)) {
     $bestsellers[] = $row;
 }
 
-//$sql = "select * from product";
+// Fetch all products with category where deleted_at is null
 $sql = "SELECT p.*, c.name AS category_name 
         FROM product p
         LEFT JOIN category c ON p.category_id = c.id
+        WHERE p.deleted_at IS NULL
         ORDER BY p.id ASC";
+
 $res = mysqli_query($con, $sql);
 
-// for new added 10 product
-
+// Fetch newly added 10 products where deleted_at is null
 $sqlNew = "SELECT p.*, c.name AS category_name 
             FROM product p
             LEFT JOIN category c ON p.category_id = c.id
-            -- WHERE p.created_at >= NOW() - INTERVAL 2 DAY
-            ORDER BY p.created_at DESC LIMIT 10";
+            WHERE p.deleted_at IS NULL
+            ORDER BY p.created_at DESC 
+            LIMIT 10";
 
 $resNew = mysqli_query($con, $sqlNew);
 
 // Store New Products
 $newProducts = [];
-
 while ($rowNew = mysqli_fetch_assoc($resNew)) {
     $newProducts[] = $rowNew;
 }
@@ -58,15 +58,17 @@ while ($row = mysqli_fetch_assoc($res)) {
     $categories[$row['category_name']][] = $row;
 }
 
-// Count total Users
-$user_result = mysqli_query($con, "SELECT COUNT(*) AS total_users FROM user where deleted_at is null");
+// Count total Users where deleted_at is null
+$user_result = mysqli_query($con, "SELECT COUNT(*) AS total_users FROM users WHERE deleted_at IS NULL");
 $user_row = mysqli_fetch_assoc($user_result);
 $total_users = $user_row['total_users'];
 
-// Count total products
-$product_result = mysqli_query($con, "SELECT COUNT(*) AS total_products FROM product where deleted_at is null");
+// Count total products where deleted_at is null
+$product_result = mysqli_query($con, "SELECT COUNT(*) AS total_products FROM product WHERE deleted_at IS NULL");
 $product_row = mysqli_fetch_assoc($product_result);
 $total_products = $product_row['total_products'];
+
+$searchQuery = isset($_GET['search_query']) ? trim($_GET['search_query']) : '';
 
 ?>
 <!DOCTYPE html>
@@ -98,8 +100,6 @@ $total_products = $product_row['total_products'];
 
     <!-- Template Stylesheet -->
     <link href="design-assets/css/style.css" rel="stylesheet">
-     <link href="assets/css/view_product.css" rel="stylesheet">
-
     <style>
         /* Smooth transition for the entire card */
         .clothing-item {
@@ -154,7 +154,7 @@ $total_products = $product_row['total_products'];
         <div class="container px-0">
             <nav class="navbar navbar-light bg-white navbar-expand-xl">
                 <a href="index.php" class="navbar-brand">
-                    <h2 class="text-primary display-6">Clothes</h2>
+                    <h2 class="text-primary display-6">E-Clothing Clothes</h2>
                     <h3 class="mb-3 text-secondary">Buy now pay Latter</h2>
                 </a>
                 <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
@@ -163,26 +163,13 @@ $total_products = $product_row['total_products'];
                 </button>
                 <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
                     <div class="navbar-nav mx-auto">
-                        <a href="index.php"
-                            class="nav-item nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'index.php')
-                                echo 'active'; ?>">Home</a>
+                        <a href="index.php" class="nav-item nav-link active">Home</a>
+                        <a href="user/our_shop.php" class="nav-item nav-link">Shop</a>
+                        <a href="user/contact.php" class="nav-item nav-link">Contact</a>
+                        <?php if (isset($_SESSION['user_id'])): ?><a href="user/myorders.php"
+                                class="nav-item nav-link">My Orders</a><?php endif; ?>
 
-                        <a href="user/our_shop.php"
-                            class="nav-item nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'our_shop.php')
-                                echo 'active'; ?>">Shop</a>
-
-                        <a href="user/contact.php"
-                            class="nav-item nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'contact.php')
-                                echo 'active'; ?>">Contact</a>
-
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <a href="user/myorders.php"
-                                class="nav-item nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'myorders.php')
-                                    echo 'active'; ?>">My
-                                Orders</a>
-                        <?php endif; ?>
                     </div>
-
                     <div class="d-flex align-items-center gap-3">
 
                         <div class="d-flex align-items-center gap-3">
@@ -195,21 +182,10 @@ $total_products = $product_row['total_products'];
                             <?php endif; ?>
                         </div>
                         <div class="d-flex m-3 me-0">
-                            <button id="searchToggle"
-                                class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4">
-                                <i class="fas fa-search text-primary"></i>
-                            </button>
-
-                            <!-- Search Input with Clear Button -->
-                            <div id="searchWrapper" class="d-none position-relative">
-                                <input type="text" id="searchBox" class="form-control ps-2 pe-5" style="width: 280px;">
-
-                                <!-- Clear Button inside input -->
-                                <button id="clearSearch" class="btn btn-sm btn-light border position-absolute"
-                                    style="right: 5px; top: 50%; transform: translateY(-50%);">
-                                    ✖
-                                </button>
-                            </div>
+                            <button
+                                class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4"
+                                data-bs-toggle="modal" data-bs-target="#searchModal"><i
+                                    class="fas fa-search text-primary"></i></button>
                             <a href="user/cart.php" class="position-relative me-4 my-auto">
                                 <i class="fa fa-shopping-bag fa-2x"></i>
                                 <span
@@ -225,28 +201,42 @@ $total_products = $product_row['total_products'];
         </div>
     </div>
     <!-- Navbar End -->
-
+ 
     <!-- Modal Search Start -->
-    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content rounded-0">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Search by keyword</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body d-flex align-items-center">
-                    <div class="input-group w-75 mx-auto d-flex">
-                        <input type="search" class="form-control p-3" placeholder="keywords"
-                            aria-describedby="search-icon-1">
-                        <span id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></span>
-                    </div>
-                </div>
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content rounded-0">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Search for products</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex align-items-center">
+                <form action="index.php" method="GET" class="input-group w-75 mx-auto d-flex">
+                    <input type="search" name="search_query" class="form-control p-3" placeholder="Search by product name..." aria-describedby="search-icon-1">
+                    <button type="submit" id="search-icon-1" class="input-group-text p-3"><i class="fa fa-search"></i></button>
+                </form>
             </div>
         </div>
     </div>
-
+</div>
+<!-- Modal Search End -->
 
     <!-- Hero Start -->
+         <style>
+        /* Zoom In/Out Hover Effect on Hero Carousel Images */
+        .hero-header .carousel-item {
+            overflow: hidden;
+        }
+
+        .hero-header .carousel-item img {
+            transition: transform 0.5s ease;
+        }
+
+        .hero-header .carousel-item:hover img {
+            transform: scale(1.1);
+        }
+    </style>
+
     <div class="container-fluid py-5 mb-5 hero-header">
         <div class="container py-5">
             <div class="row g-5 align-items-center">
@@ -265,17 +255,17 @@ $total_products = $product_row['total_products'];
                     <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">
                         <div class="carousel-inner" role="listbox">
                             <div class="carousel-item active rounded">
-                                <img src="design-assets/img/blackcoat.webp"
+                                <img src="assets/images/blackcoat.webp"
                                     class="img-fluid w-100 h-100 bg-secondary rounded" alt="First slide">
                                 <a href="#" class="btn px-4 py-2 text-white rounded">Men</a>
                             </div>
                             <div class="carousel-item rounded">
-                                <img src="design-assets/img/Red-WeddingBridalGown.avif"
+                                <img src="assets/images/Red-WeddingBridalGown.avif"
                                     class="img-fluid w-100 h-100 rounded" alt="Second slide">
                                 <a href="#" class="btn px-4 py-2 text-white rounded">Women</a>
                             </div>
                             <div class="carousel-item rounded">
-                                <img src="design-assets/img/boykidsdress.jpg" class="img-fluid w-100 h-100 rounded"
+                                <img src="assets/images/boykidsdress.jpg" class="img-fluid w-100 h-100 rounded"
                                     alt="Second slide">
                                 <a href="#" class="btn px-4 py-2 text-white rounded">Babies</a>
                             </div>
@@ -297,7 +287,32 @@ $total_products = $product_row['total_products'];
     </div>
     <!-- Hero End -->
 
-    <!-- Clothes Section Start -->
+     <!-- Clothes Section Start -->
+    <style>
+        /* Features Hover Effects */
+        .featurs-item {
+            transition: transform 0.4s ease, border 0.4s ease, box-shadow 0.4s ease;
+            border: 2px solid transparent;
+        }
+
+        .featurs-item:hover {
+            transform: scale(1.05);
+            border-color: #28a745;
+            /* green border */
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.5);
+            /* green glow */
+        }
+
+        .featurs-icon {
+            transition: background-color 0.4s ease, transform 0.4s ease;
+        }
+
+        .featurs-item:hover .featurs-icon {
+            background-color: #28a745 !important;
+            /* green icon bg */
+            transform: rotate(10deg);
+        }
+    </style>
     <div class="container-fluid featurs py-5">
         <div class="container py-5">
             <div class="row g-4">
@@ -308,7 +323,7 @@ $total_products = $product_row['total_products'];
                         </div>
                         <div class="featurs-content text-center">
                             <h5>Free Shipping</h5>
-                            <p class="mb-0">Free on order over $300</p>
+                            <p class="mb-0">Free Shipping On Order Over Rs 30000</p>
                         </div>
                     </div>
                 </div>
@@ -330,7 +345,7 @@ $total_products = $product_row['total_products'];
                         </div>
                         <div class="featurs-content text-center">
                             <h5>30 Day Return</h5>
-                            <p class="mb-0">30 day money guarantee</p>
+                            <p class="mb-0">30 Day Money Guarantee</p>
                         </div>
                     </div>
                 </div>
@@ -341,7 +356,7 @@ $total_products = $product_row['total_products'];
                         </div>
                         <div class="featurs-content text-center">
                             <h5>24/7 Support</h5>
-                            <p class="mb-0">Support every time fast</p>
+                            <p class="mb-0">Support Every Time Fast</p>
                         </div>
                     </div>
                 </div>
@@ -491,18 +506,37 @@ $total_products = $product_row['total_products'];
     </div>
     <!-- Clothes Shop End-->
 
-
     <!-- schems Start -->
+    <style>
+        .service-item {
+            transition: transform 0.4s ease;
+            overflow: hidden;
+        }
+
+        .service-item:hover {
+            transform: scale(1.05);
+        }
+
+        .service-item img {
+            transition: transform 0.4s ease;
+        }
+
+        .service-item:hover img {
+            transform: scale(1.1);
+        }
+    </style>
+
     <div class="container-fluid service py-5">
         <div class="container py-5">
             <div class="row g-4 justify-content-center">
                 <div class="col-md-6 col-lg-4">
                     <a href="#">
                         <div class="service-item bg-secondary rounded border border-secondary">
-                            <img src="design-assets/img/blazerformen.jpeg" class="img-fluid rounded-top w-100" alt="">
+                            <img src="assets/images/florencia-simonini-yhk8ZidU-K4-unsplash.jpg"
+                                class="img-fluid rounded-top w-100" alt="">
                             <div class="px-4 rounded-bottom">
                                 <div class="service-content bg-primary text-center p-4 rounded">
-                                    <h5 class="text-white">Blazer</h5>
+                                    <h5 class="text-white">Sunglasses</h5>
                                     <h3 class="mb-0">20% OFF</h3>
                                 </div>
                             </div>
@@ -512,10 +546,11 @@ $total_products = $product_row['total_products'];
                 <div class="col-md-6 col-lg-4">
                     <a href="#">
                         <div class="service-item bg-dark rounded border border-dark">
-                            <img src="design-assets/img/blackcoat.webp" class="img-fluid rounded-top w-100" alt="">
+                            <img src="assets/images/classic black tshirt.jpg" class="img-fluid rounded-top w-100"
+                                alt="">
                             <div class="px-4 rounded-bottom">
                                 <div class="service-content bg-light text-center p-4 rounded">
-                                    <h5 class="text-primary">Brand clothes</h5>
+                                    <h5 class="text-primary">Classic Black T-Shirt</h5>
                                     <h3 class="mb-0">Free delivery</h3>
                                 </div>
                             </div>
@@ -525,11 +560,12 @@ $total_products = $product_row['total_products'];
                 <div class="col-md-6 col-lg-4">
                     <a href="#">
                         <div class="service-item bg-primary rounded border border-primary">
-                            <img src="design-assets/img/blackgaun.webp" class="img-fluid rounded-top w-100" alt="">
+                            <img src="assets/images/ryan-plomp-jvoZ-Aux9aw-unsplash.jpg"
+                                class="img-fluid rounded-top w-100" alt="">
                             <div class="px-4 rounded-bottom">
                                 <div class="service-content bg-secondary text-center p-4 rounded">
-                                    <h5 class="text-white">Gown</h5>
-                                    <h3 class="mb-0">Discount 30$</h3>
+                                    <h5 class="text-white">Nike Air Force</h5>
+                                    <h3 class="mb-0">Discount 10%</h3>
                                 </div>
                             </div>
                         </div>
@@ -540,7 +576,7 @@ $total_products = $product_row['total_products'];
     </div>
     <!-- Clothes End -->
 
-    <!-- New Products Section -->
+     <!-- New Products Section -->
 
     <div class="container-fluid py-5">
         <div class="container py-5">
@@ -611,10 +647,117 @@ $total_products = $product_row['total_products'];
         </div>
     </div>
     <!-- New Products Section End -->
+     <!-- New Products Section End -->
 
+<!-- Search Results Section Start -->
+<?php
+// Check if there's a search query
+$searchQuery = isset($_GET['search_query']) ? trim($_GET['search_query']) : '';
 
+if ($searchQuery !== '') {
+    // Search for products matching the query
+    $searchSql = "SELECT p.*, c.name AS category_name 
+                 FROM product p
+                 LEFT JOIN category c ON p.category_id = c.id
+                 WHERE p.deleted_at IS NULL 
+                 AND (p.name LIKE ? OR p.description LIKE ?)
+                 ORDER BY p.name ASC";
+    
+    $stmt = mysqli_prepare($con, $searchSql);
+    $searchParam = "%$searchQuery%";
+    mysqli_stmt_bind_param($stmt, "ss", $searchParam, $searchParam);
+    mysqli_stmt_execute($stmt);
+    $searchResult = mysqli_stmt_get_result($stmt);
+    
+    $searchProducts = [];
+    while ($row = mysqli_fetch_assoc($searchResult)) {
+        $searchProducts[] = $row;
+    }
+    ?>
+    
+    <div class="container-fluid py-5" id="search-results">
+        <div class="container py-5">
+            <h1 class="mb-4">Search Results for "<?php echo htmlspecialchars($searchQuery); ?>"</h1>
+            <div class="row g-4">
+                <?php if (!empty($searchProducts)) { ?>
+                    <?php foreach ($searchProducts as $product) { ?>
+                        <div class="col-md-6 col-lg-4 col-xl-3">
+                            <div class="rounded position-relative clothing-item">
+                                <a href="user/product_details.php?id=<?php echo $product['id']; ?>">
+                                    <img src="assets/images/<?php echo $product['image']; ?>" 
+                                         class="img-fluid w-100 rounded-top" alt="">
+                                </a>
+                                <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" 
+                                     style="top: 10px; left: 10px;"><?php echo $product['category_name']; ?></div>
+                                <div class="p-4 border border-secondary border-top-0 rounded-bottom">
+                                    <h4><?php echo $product['name']; ?></h4>
+                                    <p><?php echo $product['description']; ?></p>
+                                    <div class="d-flex justify-content-between flex-lg-wrap">
+                                        <p class="text-dark fs-5 fw-bold mb-0">Rs <?php echo number_format($product['price'], 2); ?></p>
+                                        <?php if ($product['quantity'] > 0) { ?>
+                                            <a href="user/add_to_cart.php?id=<?php echo $product['id']; ?>" 
+                                               class="btn border border-secondary rounded-pill px-3 text-primary">
+                                                <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
+                                            </a>
+                                        <?php } else { ?>
+                                            <button class="btn border border-secondary rounded-pill px-3 text-danger" disabled>
+                                                Out of Stock
+                                            </button>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php } ?>
+                <?php } else { ?>
+                    <div class="col-12">
+                        <p class="text-center text-muted">No products found matching your search.</p>
+                    </div>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+?>
+<!-- Search Results Section End -->
+
+<!-- Banner Section Start-->
+<div class="container-fluid banner bg-secondary my-5">
+    
 
     <!-- Banner Section Start-->
+    <style>
+        /* Banner Hover Effects */
+        .banner .position-relative img,
+        .banner h1,
+        .banner p,
+        .banner-btn,
+        .banner .position-relative .rounded-circle {
+            transition: all 0.4s ease;
+        }
+
+        .banner .position-relative:hover img {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .banner .position-relative:hover .rounded-circle {
+            background-color: #f8f9fa;
+            transform: scale(1.1);
+        }
+
+        .banner:hover h1,
+        .banner:hover p {
+            transform: translateY(-5px);
+        }
+
+        .banner-btn:hover {
+            background-color: #000;
+            color: #fff !important;
+            border-color: #000;
+        }
+    </style>
     <div class="container-fluid banner bg-secondary my-5">
         <div class="container py-5">
             <div class="row g-4 align-items-center">
@@ -630,7 +773,7 @@ $total_products = $product_row['total_products'];
                 </div>
                 <div class="col-lg-6">
                     <div class="position-relative">
-                        <img src="design-assets/img/banner-1.avif" class="img-fluid w-100 rounded" alt="" width="10">
+                        <img src="design-assets/img/banner-1.png" class="img-fluid w-100 rounded" alt="" width="10">
                         <div class="d-flex align-items-center justify-content-center bg-white rounded-circle position-absolute"
                             style="width: 140px; height: 140px; top: 0; left: 0;">
                             <h1 style="font-size: 100px;">1</h1>
@@ -647,7 +790,7 @@ $total_products = $product_row['total_products'];
     <!-- Banner Section End -->
 
 
-    <!-- Bestsaler Product Start -->
+   <!-- Bestsaler Product Start -->
     <div class="container-fluid py-5">
         <div class="container py-5">
             <div class="text-center mx-auto mb-5" style="max-width: 700px;">
@@ -677,7 +820,7 @@ $total_products = $product_row['total_products'];
                                         <i class="fas fa-star text-primary"></i>
                                         <i class="fas fa-star"></i>
                                     </div>
-                                    <h4 class="mb-3">$<?php echo htmlspecialchars($product['price']); ?></h4>
+                                    <h4 class="mb-3">RS <?php echo htmlspecialchars($product['price']); ?></h4>
                                     <a href="user/add_to_cart.php?id=<?php echo $product['id']; ?>"
                                         class="btn border border-secondary rounded-pill px-3 text-primary">
                                         <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
@@ -693,6 +836,37 @@ $total_products = $product_row['total_products'];
     <!-- Bestsaler Product End -->
 
     <!-- Fact Start -->
+    <style>
+        /* Fact Section Hover Effects */
+        .counter {
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        /* Hover zoom and green border + glow */
+        .counter:hover {
+            transform: scale(1.05);
+            border-color: #28a745;
+            /* Green border */
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.4);
+            /* Green glow */
+        }
+
+        /* Icon transition on hover */
+        .counter i {
+            font-size: 3rem;
+            transition: color 0.3s ease;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        /* Icon turns green on hover */
+        .counter:hover i {
+            color: #28a745;
+        }
+    </style>
+
     <div class="container-fluid py-5">
         <div class="container">
             <div class="bg-light p-5 rounded">
@@ -732,7 +906,7 @@ $total_products = $product_row['total_products'];
     <!-- Fact End -->
 
 
-
+    
     <!-- Tastimonial Start -->
     <div class="container-fluid testimonial py-5">
         <div class="container py-5">
@@ -990,72 +1164,36 @@ $total_products = $product_row['total_products'];
         });
     </script>
 
+    <!-- Template Javascript -->
+     <!-- Your Search Script (ADD THIS RIGHT HERE) -->
     <script>
-        const searchToggle = document.getElementById('searchToggle');
-        const searchWrapper = document.getElementById('searchWrapper');
-        const searchBox = document.getElementById('searchBox');
-        const clearSearch = document.getElementById('clearSearch');
-
-        searchToggle.addEventListener('click', () => {
-            searchWrapper.classList.toggle('d-none');
-            if (!searchWrapper.classList.contains('d-none')) {
-                searchBox.focus();
-            } else {
-                searchBox.value = '';
-                filterProducts('');
-            }
-        });
-
-        searchBox.addEventListener('input', () => {
-            filterProducts(searchBox.value.trim().toLowerCase());
-        });
-
-        clearSearch.addEventListener('click', () => {
-            searchBox.value = '';
-            searchBox.focus();
-            filterProducts('');
-        });
-
-        function filterProducts(query) {
-            const productCards = document.querySelectorAll('.product-card');
-
-            const priceRangeMatch = query.match(/^(\d+)\s*-\s*(\d+)$/);
-            let minPrice = null, maxPrice = null;
-
-            productCards.forEach(card => {
-                const id = card.dataset.id.toLowerCase();
-                const name = card.dataset.name.toLowerCase();
-                const price = parseFloat(card.dataset.price);
-                const description = card.dataset.description.toLowerCase();
-                const category = card.dataset.category.toLowerCase();
-
-                let matches = false;
-
-                if (priceRangeMatch) {
-                    minPrice = parseFloat(priceRangeMatch[1]);
-                    maxPrice = parseFloat(priceRangeMatch[2]);
-                    if (price >= minPrice && price <= maxPrice) {
-                        matches = true;
-                    }
-                } else {
-                    if (
-                        id.includes(query) ||
-                        name.includes(query) ||
-                        price.toString().includes(query) ||
-                        description.includes(query) ||
-                        category.includes(query)
-                    ) {
-                        matches = true;
-                    }
-                }
-
-                card.style.display = matches ? '' : 'none';
+    $(document).ready(function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchQuery = urlParams.get('search_query');
+        
+        if (searchQuery) {
+            $('#searchModal').modal('hide');
+            
+            $('html, body').animate({
+                scrollTop: $('#search-results').offset().top - 100
+            }, 800);
+            
+            $('#search-results').css({
+                'background-color': 'rgba(255, 255, 0, 0.1)',
+                'transition': 'background-color 1s ease'
             });
+            
+            setTimeout(function() {
+                $('#search-results').css('background-color', '');
+            }, 2000);
         }
+    });
     </script>
 
     <!-- Template Javascript -->
     <script src="design-assets/js/main.js"></script>
+</body>
+</html>
 </body>
 
 </html>
